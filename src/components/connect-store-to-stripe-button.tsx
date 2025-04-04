@@ -1,37 +1,50 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner"
 
 import { createAccountLink } from "@/lib/actions/stripe"
-import { catchError } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { Button, type ButtonProps } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
 
-interface ConnectToStripeButtonProps {
-  storeId: number
+interface ConnectToStripeButtonProps extends ButtonProps {
+  storeId: string
 }
 
 export function ConnectStoreToStripeButton({
   storeId,
+  className,
+  ...props
 }: ConnectToStripeButtonProps) {
-  const [isPending, startTransaction] = React.useTransition()
+  const [loading, setLoading] = React.useState(false)
 
   return (
     <Button
       aria-label="Connect to Stripe"
-      onClick={() => {
-        startTransaction(async () => {
-          try {
-            const connection = await createAccountLink({ storeId })
-            window.location.href = connection.url
-          } catch (err) {
-            catchError(err)
+      className={cn(className)}
+      onClick={async () => {
+        setLoading(true)
+
+        try {
+          const { data, error } = await createAccountLink({ storeId })
+
+          if (error) {
+            toast.error(error)
+            return
           }
-        })
+
+          if (data) {
+            window.location.href = data.url
+          }
+        } finally {
+          setLoading(false)
+        }
       }}
-      disabled={isPending}
+      disabled={loading}
+      {...props}
     >
-      {isPending && (
+      {loading && (
         <Icons.spinner
           className="mr-2 size-4 animate-spin"
           aria-hidden="true"

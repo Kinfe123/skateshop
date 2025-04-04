@@ -3,8 +3,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Icons } from "@/components/icons"
-import { Shell } from "@/components/shells/shell"
-import { ProductCardSkeleton } from "@/components/skeletons/product-card-skeleton"
+import { ProductCardSkeleton } from "@/components/product-card-skeleton"
+import { Shell } from "@/components/shell"
 
 export default function ProductLoading() {
   return (

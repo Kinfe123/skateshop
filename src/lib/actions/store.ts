@@ -1,42 +1,58 @@
 "use server"
 
-import { revalidatePath, revalidateTag } from "next/cache"
+import {
+  unstable_noStore as noStore,
+  revalidatePath,
+  revalidateTag,
+} from "next/cache"
 import { redirect } from "next/navigation"
 import { db } from "@/db"
 import { stores } from "@/db/schema"
-import { and, eq, not } from "drizzle-orm"
-import { products } from "drizzle/schema"
-import { z } from "zod"
+import { auth } from "@clerk/nextjs/server"
+import { and, desc, eq, not } from "drizzle-orm"
 
+import { getErrorMessage } from "@/lib/handle-error"
 import { slugify } from "@/lib/utils"
-import { storeSchema, updateStoreSchema } from "@/lib/validations/store"
+import {
+  updateStoreSchema,
+  type CreateStoreSchema,
+} from "@/lib/validations/store"
 
-const extendedStoreSchema = storeSchema.extend({
-  userId: z.string(),
-})
+export async function createStore(
+  input: CreateStoreSchema & { userId: string }
+) {
+  noStore()
+  try {
+    const newStore = await db
+      .insert(stores)
+      .values({
+        name: input.name,
+        description: input.description,
+        userId: input.userId,
+        slug: slugify(input.name),
+      })
+      .returning({
+        id: stores.id,
+        slug: stores.slug,
+      })
+      .then((res) => res[0])
 
-export async function addStore(rawInput: z.infer<typeof extendedStoreSchema>) {
-  const input = extendedStoreSchema.parse(rawInput)
+    revalidateTag(`stores-${input.userId}`)
 
-  const storeWithSameName = await db.query.stores.findFirst({
-    where: eq(stores.name, input.name),
-  })
-
-  if (storeWithSameName) {
-    throw new Error("Store name already taken.")
+    return {
+      data: newStore,
+      error: null,
+    }
+  } catch (err) {
+    return {
+      data: null,
+      error: getErrorMessage(err),
+    }
   }
-
-  await db.insert(stores).values({
-    name: input.name,
-    description: input.description,
-    userId: input.userId,
-    slug: slugify(input.name),
-  })
-
-  revalidateTag("user-stores")
 }
 
-export async function updateStore(storeId: number, fd: FormData) {
+export async function updateStore(storeId: string, fd: FormData) {
+  noStore()
   try {
     const input = updateStoreSchema.parse({
       name: fd.get("name"),
@@ -62,43 +78,43 @@ export async function updateStore(storeId: number, fd: FormData) {
       })
       .where(eq(stores.id, storeId))
 
-    revalidateTag("user-stores")
-    revalidatePath(`/dashboard/stores/${storeId}`)
+    revalidatePath(`/store/${storeId}`)
 
     return {
-      message: "Store updated successfully.",
+      data: null,
+      error: null,
     }
   } catch (err) {
-    throw err instanceof Error
-      ? err
-      : new Error("Something went wrong, please try again.")
+    return {
+      data: null,
+      error: getErrorMessage(err),
+    }
   }
 }
 
-export async function deleteStore(storeId: number) {
-  try {
-    const store = await db.query.stores.findFirst({
-      where: eq(stores.id, storeId),
-      columns: {
-        id: true,
-      },
-    })
+export async function deleteStore(storeId: string) {
+  const { userId } = auth()
 
-    if (!store) {
-      throw new Error("Store not found")
-    }
-
-    await db.delete(stores).where(eq(stores.id, storeId))
-
-    // Delete all products of this store
-    await db.delete(products).where(eq(products.storeId, storeId))
-
-    const path = "/dashboard/stores"
-    revalidatePath(path)
-    redirect(path)
-  } catch (err) {
-    throw err instanceof Error
-      ? err
-      : new Error("Something went wrong, please try again.")
+  if (!userId) {
+    throw new Error("Unauthorized")
   }
+
+  const allStores = await db
+    .select({
+      id: stores.id,
+      userId: stores.userId,
+    })
+    .from(stores)
+    .where(and(eq(stores.id, storeId), eq(stores.userId, userId)))
+    .orderBy(desc(stores.createdAt))
+
+  // if (allStores.length < 2) {
+  //   throw new Error("Can't delete the only store")
+  // }
+
+  await db.delete(stores).where(eq(stores.id, storeId))
+
+  revalidateTag(`stores-${userId}`)
+
+  redirect(`/store/${allStores[1]?.id}`)
 }

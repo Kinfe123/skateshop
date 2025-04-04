@@ -1,15 +1,18 @@
+import { revalidateTag } from "next/cache"
 import { headers } from "next/headers"
 import { db } from "@/db"
 import { addresses, carts, orders, payments, products } from "@/db/schema"
-import { env } from "@/env.mjs"
-import type { CheckoutItem } from "@/types"
-import { clerkClient } from "@clerk/nextjs"
+import { env } from "@/env.js"
+import { clerkClient } from "@clerk/nextjs/server"
 import { eq } from "drizzle-orm"
 import type Stripe from "stripe"
 import { z } from "zod"
 
 import { stripe } from "@/lib/stripe"
-import { checkoutItemSchema } from "@/lib/validations/cart"
+import {
+  checkoutItemSchema,
+  type CheckoutItemSchema,
+} from "@/lib/validations/cart"
 
 export async function POST(req: Request) {
   const body = await req.text()
@@ -89,6 +92,7 @@ export async function POST(req: Request) {
           }
         )
       }
+      revalidateTag(`${invoicePaymentSucceeded?.metadata?.userId}-subscription`)
       break
 
     // Handling payment events
@@ -108,7 +112,7 @@ export async function POST(req: Request) {
       const paymentIntentId = paymentIntentSucceeded?.id
       const orderAmount = paymentIntentSucceeded?.amount
       const checkoutItems = paymentIntentSucceeded?.metadata
-        ?.items as unknown as CheckoutItem[]
+        ?.items as unknown as CheckoutItemSchema[]
 
       // If there are items in metadata, then create order
       if (checkoutItems) {
@@ -141,16 +145,21 @@ export async function POST(req: Request) {
           // Create new address in DB
           const stripeAddress = paymentIntentSucceeded?.shipping?.address
 
-          const newAddress = await db.insert(addresses).values({
-            line1: stripeAddress?.line1,
-            line2: stripeAddress?.line2,
-            city: stripeAddress?.city,
-            state: stripeAddress?.state,
-            country: stripeAddress?.country,
-            postalCode: stripeAddress?.postal_code,
-          })
+          const newAddress = await db
+            .insert(addresses)
+            .values({
+              line1: stripeAddress?.line1,
+              line2: stripeAddress?.line2,
+              city: stripeAddress?.city,
+              state: stripeAddress?.state,
+              country: stripeAddress?.country,
+              postalCode: stripeAddress?.postal_code,
+            })
+            .returning({
+              insertedId: addresses.id,
+            })
 
-          if (!newAddress.insertId) throw new Error("No address created.")
+          if (!newAddress[0]?.insertedId) throw new Error("No address created.")
 
           // Create new order in db
           await db.insert(orders).values({
@@ -163,9 +172,9 @@ export async function POST(req: Request) {
             amount: String(Number(orderAmount) / 100),
             stripePaymentIntentId: paymentIntentId,
             stripePaymentIntentStatus: paymentIntentSucceeded?.status,
-            name: paymentIntentSucceeded?.shipping?.name,
-            email: paymentIntentSucceeded?.receipt_email,
-            addressId: Number(newAddress.insertId),
+            name: paymentIntentSucceeded?.shipping?.name ?? "",
+            email: paymentIntentSucceeded?.receipt_email ?? "",
+            addressId: newAddress[0]?.insertedId,
           })
 
           // Update product inventory in db

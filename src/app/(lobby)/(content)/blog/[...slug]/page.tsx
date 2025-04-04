@@ -8,15 +8,15 @@ import "@/styles/mdx.css"
 import { type Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { env } from "@/env.mjs"
+import { env } from "@/env.js"
 import { ChevronLeftIcon } from "@radix-ui/react-icons"
 
 import { absoluteUrl, cn, formatDate } from "@/lib/utils"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { MdxPager } from "@/components/pagers/mdx-pager"
-import { Shell } from "@/components/shells/shell"
+import { MdxPager } from "@/components/mdx/mdx-pager"
+import { Shell } from "@/components/shell"
 
 interface PostPageProps {
   params: {
@@ -30,7 +30,7 @@ async function getPostFromParams(params: PostPageProps["params"]) {
   const post = allPosts.find((post) => post.slugAsParams === slug)
 
   if (!post) {
-    null
+    return null
   }
 
   return post

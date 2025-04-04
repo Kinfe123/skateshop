@@ -10,7 +10,11 @@ import {
   ChevronRightIcon,
 } from "@radix-ui/react-icons"
 
-import { getSubcategories, sortOptions } from "@/config/products"
+import { queryConfig } from "@/config/query"
+import {
+  type getCategories,
+  type getSubcategoriesByCategory,
+} from "@/lib/queries/product"
 import { cn, toTitleCase, truncate } from "@/lib/utils"
 import { useDebounce } from "@/hooks/use-debounce"
 import { Button } from "@/components/ui/button"
@@ -38,15 +42,16 @@ import {
 } from "@/components/ui/sheet"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
-import { ProductCard } from "@/components/cards/product-card"
 import { MultiSelect } from "@/components/multi-select"
-import { PaginationButton } from "@/components/pagers/pagination-button"
+import { PaginationButton } from "@/components/pagination-button"
+import { ProductCard } from "@/components/product-card"
 
 interface ProductsProps {
   products: Product[]
   pageCount: number
-  category?: Product["category"]
-  categories?: Product["category"][]
+  categories?: string[]
+  category?: Awaited<ReturnType<typeof getCategories>>[number]
+  subcategories?: Awaited<ReturnType<typeof getSubcategoriesByCategory>>
   stores?: Pick<
     Store & { productCount: number },
     "id" | "name" | "productCount"
@@ -59,6 +64,7 @@ export function Products({
   pageCount,
   category,
   categories,
+  subcategories,
   stores,
   storePageCount,
 }: ProductsProps) {
@@ -153,7 +159,6 @@ export function Products({
         }))
       : null
   )
-  const subcategories = getSubcategories(category)
 
   React.useEffect(() => {
     startTransition(() => {
@@ -171,8 +176,8 @@ export function Products({
   }, [selectedSubcategories])
 
   // Store filter
-  const [storeIds, setStoreIds] = React.useState<number[] | null>(
-    store_ids ? store_ids?.split(".").map(Number) : null
+  const [storeIds, setStoreIds] = React.useState<string[] | null>(
+    store_ids ? store_ids?.split(".") : null
   )
 
   React.useEffect(() => {
@@ -294,7 +299,12 @@ export function Products({
                     placeholder="Select subcategories"
                     selected={selectedSubcategories}
                     setSelected={setSelectedSubcategories}
-                    options={subcategories}
+                    options={
+                      subcategories?.map((c) => ({
+                        label: c.name,
+                        value: c.id,
+                      })) ?? []
+                    }
                   />
                 </Card>
               ) : null}
@@ -439,7 +449,7 @@ export function Products({
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {sortOptions.map((option) => (
+            {queryConfig.product.sortOptions.map((option) => (
               <DropdownMenuItem
                 key={option.label}
                 className={cn(option.value === sort && "bg-accent font-bold")}
@@ -471,9 +481,9 @@ export function Products({
         </div>
       ) : null}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {products.map((product) => (
+        {/* {products.map((product) => (
           <ProductCard key={product.id} product={product} />
-        ))}
+        ))} */}
       </div>
       {products.length ? (
         <PaginationButton

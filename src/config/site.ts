@@ -1,12 +1,12 @@
 import type { FooterItem, MainNavItem } from "@/types"
 
-import { productCategories } from "@/config/products"
+import { productConfig } from "@/config/product"
 import { slugify } from "@/lib/utils"
 
 export type SiteConfig = typeof siteConfig
 
 const links = {
-  twitter: "https://twitter.com/sadmann17",
+  x: "https://twitter.com/sadmann17",
   github: "https://github.com/sadmann7/skateshop",
   githubAccount: "https://github.com/sadmann7",
   discord: "https://discord.com/users/sadmann7",
@@ -44,18 +44,18 @@ export const siteConfig = {
         },
       ],
     },
-    ...productCategories.map((category) => ({
-      title: category.title,
+    ...productConfig.categories.map((category) => ({
+      title: category.name,
       items: [
         {
           title: "All",
-          href: `/categories/${slugify(category.title)}`,
-          description: `All ${category.title}.`,
+          href: `/categories/${slugify(category.name)}`,
+          description: `All ${category.name}.`,
           items: [],
         },
         ...category.subcategories.map((subcategory) => ({
-          title: subcategory.title,
-          href: `/categories/${slugify(category.title)}/${subcategory.slug}`,
+          title: subcategory.name,
+          href: `/categories/${slugify(category.name)}/${slugify(subcategory.name)}`,
           description: subcategory.description,
           items: [],
         })),
@@ -98,22 +98,22 @@ export const siteConfig = {
       items: [
         {
           title: "About",
-          href: "/pages/about",
+          href: "/about",
           external: false,
         },
         {
           title: "Contact",
-          href: "/pages/Contact",
+          href: "/contact",
           external: false,
         },
         {
           title: "Terms",
-          href: "/pages/terms",
+          href: "/terms",
           external: false,
         },
         {
           title: "Privacy",
-          href: "/pages/privacy",
+          href: "/privacy",
           external: false,
         },
       ],
@@ -122,8 +122,8 @@ export const siteConfig = {
       title: "Social",
       items: [
         {
-          title: "Twitter",
-          href: links.twitter,
+          title: "X",
+          href: links.x,
           external: true,
         },
         {

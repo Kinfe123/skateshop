@@ -7,6 +7,7 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings"
 import rehypeCodeTitles from "rehype-code-titles"
 import rehypePrettyCode from "rehype-pretty-code"
 import rehypeSlug from "rehype-slug"
+import { codeImport } from "remark-code-import"
 
 const computedFields: ComputedFields = {
   slug: {
@@ -111,9 +112,11 @@ export default makeSource({
   contentDirPath: "./src/content",
   documentTypes: [Post, Author, Page],
   mdx: {
+    // @ts-expect-error - codeImport types are not compatible with remark plugins
+    remarkPlugins: [codeImport],
     rehypePlugins: [
       [
-        // @ts-expect-error rehype-pretty-code has no types
+        // @ts-expect-error - rehype-pretty-code types are not compatible with rehype plugins
         rehypePrettyCode,
         {
           theme: {

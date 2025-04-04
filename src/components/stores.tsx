@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import type { CuratedStore } from "@/types"
 import { ChevronDownIcon, Cross2Icon } from "@radix-ui/react-icons"
 
-import { storeSortOptions, storeStatusOptions } from "@/config/stores"
+import { queryConfig } from "@/config/query"
+import { type getStores } from "@/lib/queries/store"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,17 +16,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { StoreCard } from "@/components/cards/store-card"
-import { PaginationButton } from "@/components/pagers/pagination-button"
+import { FacetedFilter } from "@/components/faceted-filter"
+import { PaginationButton } from "@/components/pagination-button"
+import { StoreCard } from "@/components/store-card"
 
-import { FacetedFilter } from "./faceted-filter"
+type StoresProps = Awaited<ReturnType<typeof getStores>>
 
-interface StoresProps {
-  stores: CuratedStore[]
-  pageCount: number
-}
-
-export function Stores({ stores, pageCount }: StoresProps) {
+export function Stores({ data: stores, pageCount }: StoresProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -87,7 +83,7 @@ export function Stores({ stores, pageCount }: StoresProps) {
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {storeSortOptions.map((option) => (
+            {queryConfig.store.sortOptions.map((option) => (
               <DropdownMenuItem
                 key={option.label}
                 className={cn(option.value === sort && "font-bold")}
@@ -114,7 +110,7 @@ export function Stores({ stores, pageCount }: StoresProps) {
             title="Status"
             filterValues={filterValues}
             setFilterValues={setFilterValues}
-            options={storeStatusOptions}
+            options={queryConfig.store.sortOptions}
           />
           {filterValues.length > 0 && (
             <Button

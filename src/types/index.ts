@@ -1,19 +1,14 @@
-import type { Product, Store } from "@/db/schema"
-import { type FileWithPath } from "react-dropzone"
+import { type Store } from "@/db/schema"
+import { type SQL } from "drizzle-orm"
 import type Stripe from "stripe"
-import { type z } from "zod"
+import { type ClientUploadedFileData } from "uploadthing/types"
 
-import { type userPrivateMetadataSchema } from "@/lib/validations/auth"
-import type {
-  cartItemSchema,
-  cartLineItemSchema,
-  checkoutItemSchema,
-} from "@/lib/validations/cart"
 import type { Icons } from "@/components/icons"
 
 export interface NavItem {
   title: string
   href?: string
+  active?: boolean
   disabled?: boolean
   external?: boolean
   icon?: keyof typeof Icons
@@ -22,10 +17,6 @@ export interface NavItem {
 }
 
 export interface NavItemWithChildren extends NavItem {
-  items: NavItemWithChildren[]
-}
-
-export interface NavItemWithOptionalChildren extends NavItem {
   items?: NavItemWithChildren[]
 }
 
@@ -38,25 +29,15 @@ export interface FooterItem {
   }[]
 }
 
-export type MainNavItem = NavItemWithOptionalChildren
+export type MainNavItem = NavItemWithChildren
 
 export type SidebarNavItem = NavItemWithChildren
-
-export type UserRole = z.infer<typeof userPrivateMetadataSchema.shape.role>
 
 export interface SearchParams {
   [key: string]: string | string[] | undefined
 }
 
-export interface Option {
-  label: string
-  value: string
-  icon?: React.ComponentType<{ className?: string }>
-}
-
-export type FileWithPreview = FileWithPath & {
-  preview: string
-}
+export interface UploadedFile<T = unknown> extends ClientUploadedFileData<T> {}
 
 export interface StoredFile {
   id: string
@@ -64,56 +45,46 @@ export interface StoredFile {
   url: string
 }
 
-export interface DataTableSearchableColumn<TData> {
-  id: keyof TData
-  title: string
+export interface Option {
+  label: string
+  value: string
+  icon?: React.ComponentType<{ className?: string }>
+  withCount?: boolean
 }
 
-export interface DataTableFilterableColumn<TData>
-  extends DataTableSearchableColumn<TData> {
-  options: Option[]
+export interface DataTableFilterField<TData> {
+  label: string
+  value: keyof TData
+  placeholder?: string
+  options?: Option[]
 }
 
-export interface Category {
-  title: Product["category"]
-  image: string
-  icon: React.ComponentType<{ className?: string }>
-  subcategories: Subcategory[]
-}
-
-export interface Subcategory {
-  title: string
-  description?: string
-  image?: string
-  slug: string
-}
-
-export interface CuratedStore {
-  id: Store["id"]
-  name: Store["name"]
-  description?: Store["description"]
-  stripeAccountId?: Store["stripeAccountId"]
-  productCount?: number
-}
-
-export type CartItem = z.infer<typeof cartItemSchema>
-
-export type CheckoutItem = z.infer<typeof checkoutItemSchema>
-
-export type CartLineItem = z.infer<typeof cartLineItemSchema>
+export type DrizzleWhere<T> =
+  | SQL<unknown>
+  | ((aliases: T) => SQL<T> | undefined)
+  | undefined
 
 export type StripePaymentStatus = Stripe.PaymentIntent.Status
 
-export interface SubscriptionPlan {
-  id: "basic" | "standard" | "pro"
-  name: string
+export interface Plan {
+  id: Store["plan"]
+  title: string
   description: string
   features: string[]
   stripePriceId: string
-  price: number
+  limits: {
+    stores: number
+    products: number
+    tags: number
+    variants: number
+  }
 }
 
-export interface UserSubscriptionPlan extends SubscriptionPlan {
+export interface PlanWithPrice extends Plan {
+  price: string
+}
+
+export interface UserPlan extends Plan {
   stripeSubscriptionId?: string | null
   stripeCurrentPeriodEnd?: string | null
   stripeCustomerId?: string | null

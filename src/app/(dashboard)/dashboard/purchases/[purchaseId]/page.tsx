@@ -3,10 +3,10 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { db } from "@/db"
 import { orders, stores } from "@/db/schema"
-import { env } from "@/env.mjs"
+import { env } from "@/env.js"
 import { and, eq } from "drizzle-orm"
 
-import { getOrderLineItems } from "@/lib/fetchers/order"
+import { getOrderLineItems } from "@/lib/actions/order"
 import { formatId, formatPrice } from "@/lib/utils"
 import {
   Card,
@@ -20,7 +20,7 @@ import {
   PageHeaderDescription,
   PageHeaderHeading,
 } from "@/components/page-header"
-import { Shell } from "@/components/shells/shell"
+import { Shell } from "@/components/shell"
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
@@ -36,7 +36,7 @@ interface PurchasePageProps {
 
 export default async function PurchasePage({ params }: PurchasePageProps) {
   // Using the purchaseId as the orderId in the sql query
-  const orderId = Number(params.purchaseId)
+  const orderId = decodeURIComponent(params.purchaseId)
 
   const order = await db.query.orders.findFirst({
     where: and(eq(orders.id, orderId), eq(orders.id, orderId)),
@@ -60,10 +60,7 @@ export default async function PurchasePage({ params }: PurchasePageProps) {
 
   return (
     <Shell variant="sidebar">
-      <PageHeader
-        id="purchase-page-header"
-        aria-labelledby="purchase-page-header-heading"
-      >
+      <PageHeader>
         <PageHeaderHeading size="sm">Purchase</PageHeaderHeading>
         <PageHeaderDescription size="sm">
           View your purchase details

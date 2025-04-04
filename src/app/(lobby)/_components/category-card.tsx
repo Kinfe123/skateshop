@@ -1,11 +1,10 @@
 import * as React from "react"
 import Link from "next/link"
-import type { Category } from "@/types"
 
 import {
-  getProductCount,
-  type ProductCountPromise,
-} from "@/lib/fetchers/product"
+  getProductCountByCategory,
+  type getCategories,
+} from "@/lib/queries/product"
 import {
   Card,
   CardContent,
@@ -14,25 +13,27 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Icons } from "@/components/icons"
 
 interface CategoryCardProps {
-  category: Category
+  category: Awaited<ReturnType<typeof getCategories>>[number]
 }
 
 export function CategoryCard({ category }: CategoryCardProps) {
-  const productCountPromise = getProductCount({ category })
+  const productCountPromise = getProductCountByCategory({
+    categoryId: category.id,
+  })
 
   return (
-    <Link href={`/categories/${category.title}`}>
-      <span className="sr-only">{category.title}</span>
-      <Card className="relative flex size-full flex-col items-center justify-center overflow-hidden rounded-lg bg-transparent transition-colors hover:bg-muted/50">
-        <CardHeader>
-          <div className="grid size-11 place-items-center rounded-full border-2">
-            <category.icon className="size-5" aria-hidden="true" />
-          </div>
+    <Link href={`/collections/${category.slug}`}>
+      <Card className="h-full rounded-lg transition-colors hover:bg-muted/25">
+        <CardHeader className="flex-1">
+          <CardTitle className="capitalize">{category.name}</CardTitle>
+          <CardDescription className="line-clamp-3 text-balance">
+            {category.description}
+          </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col items-center space-y-1.5">
-          <CardTitle className="capitalize">{category.title}</CardTitle>
+        <CardContent className="pt-2">
           <React.Suspense fallback={<Skeleton className="h-4 w-20" />}>
             <ProductCount productCountPromise={productCountPromise} />
           </React.Suspense>
@@ -43,11 +44,16 @@ export function CategoryCard({ category }: CategoryCardProps) {
 }
 
 interface ProductCountProps {
-  productCountPromise: ProductCountPromise
+  productCountPromise: ReturnType<typeof getProductCountByCategory>
 }
 
 async function ProductCount({ productCountPromise }: ProductCountProps) {
-  const productCount = await productCountPromise
+  const count = await productCountPromise
 
-  return <CardDescription>{productCount} products</CardDescription>
+  return (
+    <div className="flex w-fit items-center text-[0.8rem] text-muted-foreground">
+      <Icons.product className="mr-1.5 size-3.5" aria-hidden="true" />
+      {count} products
+    </div>
+  )
 }

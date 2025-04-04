@@ -1,16 +1,16 @@
 "use client"
 
 import * as React from "react"
-import type { CartLineItem } from "@/types"
 import { MinusIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons"
 
 import { deleteCartItem, updateCartItem } from "@/lib/actions/cart"
-import { catchError } from "@/lib/utils"
+import { showErrorToast } from "@/lib/handle-error"
+import { type CartLineItemSchema } from "@/lib/validations/cart"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 interface UpdateCartProps {
-  cartLineItem: CartLineItem
+  cartLineItem: CartLineItemSchema
 }
 
 export function UpdateCart({ cartLineItem }: UpdateCartProps) {
@@ -33,7 +33,7 @@ export function UpdateCart({ cartLineItem }: UpdateCartProps) {
                   quantity: Number(cartLineItem.quantity) - 1,
                 })
               } catch (err) {
-                catchError(err)
+                showErrorToast(err)
               }
             })
           }}
@@ -56,7 +56,7 @@ export function UpdateCart({ cartLineItem }: UpdateCartProps) {
                   quantity: Number(e.target.value),
                 })
               } catch (err) {
-                catchError(err)
+                showErrorToast(err)
               }
             })
           }}
@@ -75,7 +75,7 @@ export function UpdateCart({ cartLineItem }: UpdateCartProps) {
                   quantity: Number(cartLineItem.quantity) + 1,
                 })
               } catch (err) {
-                catchError(err)
+                showErrorToast(err)
               }
             })
           }}
@@ -97,7 +97,7 @@ export function UpdateCart({ cartLineItem }: UpdateCartProps) {
                 productId: cartLineItem.id,
               })
             } catch (err) {
-              catchError(err)
+              showErrorToast(err)
             }
           })
         }}

@@ -3,13 +3,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { db } from "@/db"
 import { stores } from "@/db/schema"
-import { env } from "@/env.mjs"
+import { env } from "@/env.js"
 import { ArrowLeftIcon } from "@radix-ui/react-icons"
 import { eq } from "drizzle-orm"
 
-import { createPaymentIntent } from "@/lib/actions/stripe"
-import { getCart } from "@/lib/fetchers/cart"
-import { getStripeAccount } from "@/lib/fetchers/stripe"
+import { getCart } from "@/lib/actions/cart"
+import { createPaymentIntent, getStripeAccount } from "@/lib/actions/stripe"
 import { cn, formatPrice } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer"
@@ -18,7 +17,7 @@ import { Separator } from "@/components/ui/separator"
 import { CartLineItems } from "@/components/checkout/cart-line-items"
 import { CheckoutForm } from "@/components/checkout/checkout-form"
 import { CheckoutShell } from "@/components/checkout/checkout-shell"
-import { Shell } from "@/components/shells/shell"
+import { Shell } from "@/components/shell"
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
@@ -33,7 +32,7 @@ interface CheckoutPageProps {
 }
 
 export default async function CheckoutPage({ params }: CheckoutPageProps) {
-  const storeId = Number(params.storeId)
+  const storeId = decodeURIComponent(params.storeId)
 
   const store = await db
     .select({
@@ -62,7 +61,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
   })
 
   const total = cartLineItems.reduce(
-    (total, item) => total + item.quantity * Number(item.price),
+    (total, item) => total + Number(item.quantity) * Number(item.price),
     0
   )
 
@@ -94,7 +93,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
   }
 
   return (
-    <section className="relative flex h-full min-h-[100dvh] flex-col items-start justify-center lg:h-[100dvh] lg:flex-row lg:overflow-hidden">
+    <section className="relative flex h-full min-h-dvh flex-col items-start justify-center lg:h-dvh lg:flex-row lg:overflow-hidden">
       <div className="w-full space-y-12 pt-8 lg:pt-16">
         <div className="fixed top-0 z-40 h-16 w-full bg-[#09090b] py-4 lg:static lg:top-auto lg:z-0 lg:h-0 lg:py-0">
           <div className="container flex max-w-xl items-center justify-between space-x-2 lg:ml-auto lg:mr-0 lg:pr-[4.5rem]">
@@ -133,7 +132,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
                     <div className="flex-1">
                       Total (
                       {cartLineItems.reduce(
-                        (acc, item) => acc + item.quantity,
+                        (acc, item) => acc + Number(item.quantity),
                         0
                       )}
                       )

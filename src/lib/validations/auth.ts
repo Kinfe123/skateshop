@@ -9,10 +9,8 @@ export const authSchema = z.object({
     .min(8, {
       message: "Password must be at least 8 characters long",
     })
-    .max(100)
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/, {
-      message:
-        "Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character",
+    .max(100, {
+      message: "Password must be at most 100 characters long",
     }),
 })
 
@@ -41,9 +39,12 @@ export const resetPasswordSchema = z
   })
 
 export const userPrivateMetadataSchema = z.object({
-  role: z.enum(["user", "admin", "super_admin"]),
   stripePriceId: z.string().optional().nullable(),
   stripeSubscriptionId: z.string().optional().nullable(),
   stripeCustomerId: z.string().optional().nullable(),
   stripeCurrentPeriodEnd: z.string().optional().nullable(),
 })
+
+export type UserPrivateMetadataSchema = z.infer<
+  typeof userPrivateMetadataSchema
+>

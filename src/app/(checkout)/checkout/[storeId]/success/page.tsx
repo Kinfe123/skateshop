@@ -2,11 +2,11 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { db } from "@/db"
 import { stores } from "@/db/schema"
-import { env } from "@/env.mjs"
+import { env } from "@/env.js"
 import { eq } from "drizzle-orm"
 
-import { getOrderLineItems } from "@/lib/fetchers/order"
-import { getPaymentIntent } from "@/lib/fetchers/stripe"
+import { getOrderLineItems } from "@/lib/actions/order"
+import { getPaymentIntent } from "@/lib/actions/stripe"
 import { cn, formatPrice } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { CartLineItems } from "@/components/checkout/cart-line-items"
@@ -36,7 +36,7 @@ export default async function OrderSuccessPage({
   params,
   searchParams,
 }: OrderSuccessPageProps) {
-  const storeId = Number(params.storeId)
+  const storeId = decodeURIComponent(params.storeId)
   const {
     payment_intent,
     payment_intent_client_secret,
@@ -68,7 +68,7 @@ export default async function OrderSuccessPage({
       : []
 
   return (
-    <div className="flex size-full max-h-[100dvh] flex-col gap-10 overflow-hidden pb-8 pt-6 md:py-8">
+    <div className="flex size-full max-h-dvh flex-col gap-10 overflow-hidden pb-8 pt-6 md:py-8">
       {isVerified ? (
         <div className="grid gap-10 overflow-auto">
           <PageHeader

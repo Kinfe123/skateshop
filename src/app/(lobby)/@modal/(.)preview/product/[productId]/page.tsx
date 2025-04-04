@@ -2,18 +2,18 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { db } from "@/db"
+import { categories, products } from "@/db/schema"
 import type { StoredFile } from "@/types"
 import { EnterFullScreenIcon } from "@radix-ui/react-icons"
 import { eq, sql } from "drizzle-orm"
-import { products } from "drizzle/schema"
 
 import { cn, formatPrice } from "@/lib/utils"
 import { AlertDialogAction } from "@/components/ui/alert-dialog"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { buttonVariants } from "@/components/ui/button"
+import { DialogShell } from "@/components/dialog-shell"
 import { PlaceholderImage } from "@/components/placeholder-image"
 import { Rating } from "@/components/rating"
-import { DialogShell } from "@/components/shells/dialog-shell"
 
 interface ProductModalPageProps {
   params: {
@@ -24,7 +24,7 @@ interface ProductModalPageProps {
 export default async function ProductModalPage({
   params,
 }: ProductModalPageProps) {
-  const productId = Number(params.productId)
+  const productId = decodeURIComponent(params.productId)
 
   const product = await db
     .select({
@@ -32,12 +32,13 @@ export default async function ProductModalPage({
       name: products.name,
       description: products.description,
       images: sql<StoredFile[] | null>`${products.images}`,
-      category: products.category,
+      category: categories.name,
       price: products.price,
       inventory: products.inventory,
       rating: products.rating,
     })
     .from(products)
+    .leftJoin(categories, eq(products.categoryId, categories.id))
     .where(eq(products.id, productId))
     .execute()
     .then((rows) => rows[0])

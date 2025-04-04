@@ -3,11 +3,11 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { db } from "@/db"
 import { orders, stores, type Order } from "@/db/schema"
-import { env } from "@/env.mjs"
+import { env } from "@/env.js"
 import type { SearchParams } from "@/types"
 import { and, asc, desc, eq, inArray, like, sql } from "drizzle-orm"
 
-import { getCacheduser } from "@/lib/fetchers/auth"
+import { getCachedUser } from "@/lib/queries/user"
 import { getUserEmail } from "@/lib/utils"
 import { purchasesSearchParamsSchema } from "@/lib/validations/params"
 import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton"
@@ -16,8 +16,8 @@ import {
   PageHeaderDescription,
   PageHeaderHeading,
 } from "@/components/page-header"
-import { PurchasesTableShell } from "@/components/shells/purchases-table-shell"
-import { Shell } from "@/components/shells/shell"
+import { Shell } from "@/components/shell"
+import { PurchasesTable } from "@/components/tables/purchases-table"
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
@@ -34,7 +34,7 @@ export default async function PurchasesPage({
   const { page, per_page, sort, store, status } =
     purchasesSearchParamsSchema.parse(searchParams)
 
-  const user = await getCacheduser()
+  const user = await getCachedUser()
 
   if (!user) {
     redirect("/signin")
@@ -132,18 +132,14 @@ export default async function PurchasesPage({
 
   return (
     <Shell variant="sidebar">
-      <PageHeader
-        id="dashboard-purchases-header"
-        aria-labelledby="dashboard-purchases-header-heading"
-        separated
-      >
+      <PageHeader>
         <PageHeaderHeading size="sm">Purchases</PageHeaderHeading>
         <PageHeaderDescription size="sm">
           Manage your purchases
         </PageHeaderDescription>
       </PageHeader>
       <React.Suspense fallback={<DataTableSkeleton columnCount={6} />}>
-        <PurchasesTableShell promise={ordersPromise} />
+        <PurchasesTable promise={ordersPromise} />
       </React.Suspense>
     </Shell>
   )

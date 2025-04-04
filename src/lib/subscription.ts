@@ -1,39 +1,20 @@
-import type { SubscriptionPlan, UserSubscriptionPlan } from "@/types"
+import type { Plan } from "@/types"
 
-import { storeSubscriptionPlans } from "@/config/subscriptions"
+import { pricingConfig } from "@/config/pricing"
 
-export function getPlanFeatures(planId?: SubscriptionPlan["id"]) {
-  const plan = storeSubscriptionPlans.find((plan) => plan.id === planId)
-  const features = plan?.features.map((feature) => feature.split(",")).flat()
-
-  const maxStoreCount =
-    features?.find((feature) => feature.match(/store/i))?.match(/\d+/) ?? 0
-
-  const maxProductCount =
-    features?.find((feature) => feature.match(/product/i))?.match(/\d+/) ?? 0
-
-  return {
-    maxStoreCount,
-    maxProductCount,
-  }
+export function getPlanByPriceId({ priceId }: { priceId: string }) {
+  return Object.values(pricingConfig.plans).find(
+    (plan) => plan.stripePriceId === priceId
+  )
 }
 
-export function getDashboardRedirectPath(input: {
-  storeCount: number
-  subscriptionPlan: UserSubscriptionPlan | null
-}): string {
-  const { storeCount, subscriptionPlan } = input
+export function getPlanLimits({ planId }: { planId?: Plan["id"] }) {
+  const { features } = pricingConfig.plans[planId ?? "free"]
 
-  const minStoresWithProductCount = {
-    basic: 1,
-    standard: 2,
-    pro: 3,
-  }[subscriptionPlan?.id ?? "basic"]
+  const [storeLimit, productLimit] = features.map((feature) => {
+    const [value] = feature.match(/\d+/) || []
+    return value ? parseInt(value, 10) : 0
+  })
 
-  const isActive = subscriptionPlan?.isActive ?? false
-  const hasEnoughStores = storeCount >= minStoresWithProductCount
-
-  return isActive && hasEnoughStores
-    ? "/dashboard/billing"
-    : "/dashboard/stores/new"
+  return { storeLimit: storeLimit ?? 0, productLimit: productLimit ?? 0 }
 }

@@ -154,26 +154,9 @@ export default {
       },
       /* */
       fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
-        mono: ["var(--font-mono)", ...fontFamily.mono],
+        sans: ["var(--font-geist-sans)", ...fontFamily.sans],
+        mono: ["var(--font-geist-mono)", ...fontFamily.mono],
         heading: ["var(--font-heading)", ...fontFamily.sans],
-      },
-      typography: {
-        DEFAULT: {
-          css: {
-            h1: {
-              fontFamily: "Cal Sans",
-            },
-            h2: {
-              fontFamily: "Cal Sans",
-            },
-            h3: {
-              fontFamily: "Cal Sans",
-            },
-            "blockquote p:first-of-type::before": { content: "none" },
-            "blockquote p:first-of-type::after": { content: "none" },
-          },
-        },
       },
       keyframes: {
         "accordion-down": {
@@ -195,11 +178,49 @@ export default {
           "60%": { transform: "translateX(3px) rotate(2.4deg)" },
           "75%": { transform: "translateX(-2px) rotate(-1.2deg)" },
         },
+        /**
+         * Original source:
+         * @see https://github.com/juliusmarminge/acme-corp/blob/main/tooling/tailwind/index.ts
+         */
+        "fade-up": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(10px)",
+          },
+          "75%": {
+            opacity: "0.6",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
+        },
+        "fade-down": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(-10px)",
+          },
+          "75%": {
+            opacity: "0.6",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
+        },
+        "caret-blink": {
+          "0%,70%,100%": { opacity: "1" },
+          "20%,50%": { opacity: "0" },
+        },
       },
+      /* */
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         wiggle: "wiggle 0.8s both",
+        "fade-up": "fade-up 0.5s ease-out",
+        "fade-down": "fade-down 0.5s ease-out",
+        "caret-blink": "caret-blink 1.25s ease-out infinite",
       },
     },
   },

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { type Metadata } from "next"
-import { env } from "@/env.mjs"
+import { env } from "@/env.js"
 import { allPosts } from "contentlayer/generated"
 
 import { Separator } from "@/components/ui/separator"
@@ -9,7 +9,7 @@ import {
   PageHeaderDescription,
   PageHeaderHeading,
 } from "@/components/page-header"
-import { Shell } from "@/components/shells/shell"
+import { Shell } from "@/components/shell"
 
 import { PostCard } from "./_components/post-card"
 import { PostCardSkeleton } from "./_components/post-card-skeleton"

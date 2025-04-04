@@ -1,7 +1,6 @@
-import * as React from "react"
-import { type Option } from "@/types"
+import type { Option } from "@/types"
 import { CheckIcon, PlusCircledIcon } from "@radix-ui/react-icons"
-import { type Column } from "@tanstack/react-table"
+import type { Column } from "@tanstack/react-table"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -22,7 +21,7 @@ import {
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 
-interface DataTableFacetedFilter<TData, TValue> {
+interface DataTableFacetedFilterProps<TData, TValue> {
   column?: Column<TData, TValue>
   title?: string
   options: Option[]
@@ -32,19 +31,14 @@ export function DataTableFacetedFilter<TData, TValue>({
   column,
   title,
   options,
-}: DataTableFacetedFilter<TData, TValue>) {
+}: DataTableFacetedFilterProps<TData, TValue>) {
   const selectedValues = new Set(column?.getFilterValue() as string[])
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
-          aria-label="Filter rows"
-          variant="outline"
-          size="sm"
-          className="h-8 border-dashed"
-        >
-          <PlusCircledIcon className="mr-2 size-4" aria-hidden="true" />
+        <Button variant="outline" size="sm" className="h-8 border-dashed">
+          <PlusCircledIcon className="mr-2 size-4" />
           {title}
           {selectedValues?.size > 0 && (
             <>
@@ -81,7 +75,7 @@ export function DataTableFacetedFilter<TData, TValue>({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0" align="start">
+      <PopoverContent className="w-[12.5rem] p-0" align="start">
         <Command>
           <CommandInput placeholder={title} />
           <CommandList>
@@ -89,6 +83,7 @@ export function DataTableFacetedFilter<TData, TValue>({
             <CommandGroup>
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value)
+
                 return (
                   <CommandItem
                     key={option.value}
@@ -112,7 +107,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                           : "opacity-50 [&_svg]:invisible"
                       )}
                     >
-                      <CheckIcon className={cn("size-4")} aria-hidden="true" />
+                      <CheckIcon className="size-4" aria-hidden="true" />
                     </div>
                     {option.icon && (
                       <option.icon
@@ -121,6 +116,12 @@ export function DataTableFacetedFilter<TData, TValue>({
                       />
                     )}
                     <span>{option.label}</span>
+                    {option.withCount &&
+                      column?.getFacetedUniqueValues()?.get(option.value) && (
+                        <span className="ml-auto flex size-4 items-center justify-center font-mono text-xs">
+                          {column?.getFacetedUniqueValues().get(option.value)}
+                        </span>
+                      )}
                   </CommandItem>
                 )
               })}
